@@ -33,7 +33,7 @@ end;
 
 create table `big_data_test_score` (
     `id` int not null auto_increment comment '主键',
-    `user_id` varchar(50) default  '' comment  '用户名',
+    `user_id` int default null comment  '用户名',
     `math` int default null comment '数学分数',
     `chinese` int default null comment '语文分数',
     `english` int default null comment '英语分数',
@@ -66,7 +66,7 @@ end;
 
 create table `big_data_test_hobby` (
     `id` int not null auto_increment comment '主键',
-    `user_id` varchar(50) default  '' comment  '用户名',
+    `user_id` int default null comment  '用户名',
     `hobby` int default null comment '爱好',
     `create_time` datetime default  now(),
     `update_time` datetime default now(),

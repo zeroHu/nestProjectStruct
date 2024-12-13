@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Users } from './users.entity';
+import { Scores } from 'src/entity/scores.entity';
 import { SearchUsersDto } from './dto/search-user.dto';
+import { CreateScoreDto } from './dto/score.dto';
+import { CreateUserDto } from './dto/users.dto';
 import { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 import * as stream from 'stream';
@@ -12,6 +15,8 @@ export class UsersService {
   constructor(
     @InjectRepository(Users)
     private userRepository: Repository<Users>,
+    @InjectRepository(Scores)
+    private scoreRepository: Repository<Scores>,
   ) {}
   // 查询用户列表
   async findAll(searchUserDto: SearchUsersDto) {
@@ -126,6 +131,7 @@ export class UsersService {
     passThrough.end(); // 结束流
   }
 
+  // 查询用户信息，用户爱好信息
   async findUserWithHobbies(id: number): Promise<any> {
     return this.userRepository.findOne({
       where: { id: id },
@@ -133,6 +139,7 @@ export class UsersService {
     });
   }
 
+  // 查询用户信息，用户考试信息
   async findUserWithScore(id: number): Promise<any> {
     // 查询用户及分数
     return this.userRepository.findOne({
@@ -141,19 +148,55 @@ export class UsersService {
     });
   }
 
+  // 查某一用户
   findOne(id: number): Promise<Users> {
     return this.userRepository.findOneBy({ id });
   }
 
-  create(user: Partial<Users>): Promise<Users> {
-    return this.userRepository.save(user);
+  // 创建用户
+  create(createUserDto: CreateUserDto): Promise<Users> {
+    return this.userRepository.save(createUserDto);
   }
 
+  // 创建用户，用户考试成绩
+  async createUserWidthScore(createUserDto: CreateUserDto) {
+    const { score, ...userData } = createUserDto;
+    const queryRunner =
+      this.userRepository.manager.connection.createQueryRunner();
+    await queryRunner.startTransaction();
+
+    try {
+      // 用户表
+      const user = this.userRepository.create(userData);
+      const createdUser = await queryRunner.manager.save(Users, user);
+
+      // 分数表
+      const scoreData = {
+        ...score,
+        user_id: createdUser.id,
+      };
+      await queryRunner.manager.save(Scores, scoreData);
+
+      // 提交事务
+      await queryRunner.commitTransaction();
+      return createdUser;
+    } catch (err) {
+      // 出错，回滚事务
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      // 释放查询运行器
+      await queryRunner.release();
+    }
+  }
+
+  // 更新用户
   async update(id: number, user: Partial<Users>): Promise<Users> {
     await this.userRepository.update(id, user);
     return this.findOne(id);
   }
 
+  // 删除用户
   async remove(id: number): Promise<void> {
     await this.userRepository.delete(id);
   }

@@ -10,10 +10,10 @@ import { Users } from '../users/users.entity';
 @Entity('big_data_test_score')
 export class Scores {
   @PrimaryGeneratedColumn()
-  id: number; // id
+  id: number; // 主键 - id
 
   @Column()
-  user_id: string; // 用户id
+  user_id: number; // 外键 - 用户id
 
   @Column()
   math: number; // 数学
