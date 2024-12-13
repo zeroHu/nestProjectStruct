@@ -6,16 +6,17 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   private readonly whiteList = [
     { path: '/auth/login', method: 'POST' }, // 登录接口
     { path: '/auth/register', method: 'POST' }, // 注册接口
+    { path: '/users/download', method: 'GET' }, // 用户下载接口
+    { path: '/users/download/big', method: 'GET' }, // 用户下载接口
   ];
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const { url, method } = request; // 获取请求路径
-
+    const { path, method } = request; // 获取请求路径
     // 如果路径和方法都在白名单中，则跳过守卫
     if (
       this.whiteList.some(
-        (route) => route.path === url && route.method === method,
+        (route) => route.path === path && route.method === method,
       )
     ) {
       return true;
